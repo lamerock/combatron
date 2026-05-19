@@ -612,7 +612,7 @@ def _index_html() -> str:
       </div>
       <div id=\"chapters\" class=\"chapter-list\"></div>
       <div class=\"tips\">
-        <div><strong>Keyboard:</strong> N/P chapter, J/K page, +/- zoom, F fit width, D export</div>
+        <div><strong>Keyboard:</strong> N/P chapter, J/K page, +/- zoom, F fit width</div>
         <div><strong>Tip:</strong> press / to focus chapter search.</div>
       </div>
     </aside>
@@ -627,7 +627,7 @@ def _index_html() -> str:
         <button id=\"fitWidth\">Fit Width</button>
         <button id=\"zoomOut\">-</button>
         <button id=\"zoomIn\">+</button>
-        <button id=\"download\" class=\"primary\">Export Current Chapter</button>
+        <button id=\"download\" class=\"primary\" disabled>Export Disabled</button>
         <div class="meta-status">
           <span id="pageInfo">Page 0 of 0</span>
           <span id="status" class="status">Loading chapters...</span>
@@ -739,18 +739,12 @@ def _index_html() -> str:
     }
 
     function requestPremiumExport() {
-      if (state.currentIndex < 0) return;
-      openDonationModal();
+      showError(new Error('Export is disabled.'));
     }
 
     function continueExport() {
-      if (state.currentIndex < 0) {
-        closeDonationModal();
-        return;
-      }
-      const chapter = state.filtered[state.currentIndex];
       closeDonationModal();
-      window.location.href = '/api/export?url=' + encodeURIComponent(chapter.url);
+      showError(new Error('Export is disabled.'));
     }
 
     function showError(error) {
@@ -900,6 +894,7 @@ def _index_html() -> str:
       els.nextChapter.disabled = state.currentIndex >= state.filtered.length - 1;
       els.prevPage.disabled = state.currentPage <= 0;
       els.nextPage.disabled = state.currentPage >= state.currentPages.length - 1;
+      els.download.disabled = true;
     }
 
     function jumpPage(delta) {
@@ -983,8 +978,8 @@ def _index_html() -> str:
       } else if (key === 'f') {
         state.scale = 1;
         adjustZoom(0);
-      } else if (key === 'd' && state.currentIndex >= 0) {
-        requestPremiumExport();
+      } else if (key === 'd') {
+        showError(new Error('Export is disabled.'));
       } else if (key === 'escape') {
         if (els.disclaimerModal.classList.contains('open')) {
           acceptDisclaimer();
@@ -1051,13 +1046,7 @@ class CombatronHandler(BaseHTTPRequestHandler):
             self._send_image(payload, suffix, content_type)
             return
         if parsed.path == "/api/export":
-            query = parse_qs(parsed.query)
-            url = query.get("url", [""])[0]
-            chapter = self._find_chapter(url)
-            if chapter is None:
-                self._send_json({"error": "chapter not found"}, status=HTTPStatus.NOT_FOUND)
-                return
-            self._send_zip(self._chapter_zip(chapter))
+          self._send_json({"error": "export is disabled"}, status=HTTPStatus.FORBIDDEN)
             return
         self.send_error(HTTPStatus.NOT_FOUND, "Not Found")
 
