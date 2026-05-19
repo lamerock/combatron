@@ -450,91 +450,6 @@ def _index_html() -> str:
       font-size: 0.9rem;
     }
 
-    .donation-modal {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      z-index: 30;
-    }
-
-    .donation-modal.open {
-      display: flex;
-    }
-
-    .donation-backdrop {
-      position: absolute;
-      inset: 0;
-      border: 0;
-      margin: 0;
-      padding: 0;
-      background: rgba(3, 7, 12, 0.66);
-      cursor: pointer;
-    }
-
-    .donation-card {
-      position: relative;
-      width: min(92vw, 480px);
-      border: 1px solid rgba(247, 174, 71, 0.5);
-      border-radius: 16px;
-      background: linear-gradient(180deg, #1a2431 0%, #111925 100%);
-      box-shadow: var(--shadow);
-      padding: 18px;
-      z-index: 1;
-    }
-
-    .donation-kicker {
-      color: var(--accent-2);
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-
-    .donation-title {
-      margin: 0 0 8px;
-      font-size: 1.14rem;
-    }
-
-    .donation-copy {
-      margin: 0 0 14px;
-      color: var(--muted);
-      line-height: 1.55;
-    }
-
-    .donation-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .donation-actions button,
-    .donation-actions a {
-      border: 1px solid var(--line);
-      background: var(--panel-2);
-      color: var(--text);
-      text-decoration: none;
-      padding: 10px 13px;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .donation-actions .donate {
-      border-color: rgba(247, 174, 71, 0.7);
-      background: linear-gradient(180deg, #654b26, #523a1b);
-      color: #ffe8c6;
-    }
-
-    .donation-actions .continue {
-      border-color: #5e7390;
-      background: var(--panel-3);
-    }
-
     .drawer-toggle {
       display: none;
     }
@@ -653,18 +568,6 @@ def _index_html() -> str:
       </div>
     </section>
   </div>
-  <div id=\"donationModal\" class=\"donation-modal\" aria-hidden=\"true\">
-    <button id=\"donationBackdrop\" class=\"donation-backdrop\" type=\"button\" aria-label=\"Close donation dialog\"></button>
-    <section class=\"donation-card\" role=\"dialog\" aria-modal=\"true\" aria-labelledby=\"donationTitle\">
-      <div class=\"donation-kicker\">Premium Feature</div>
-      <h2 id=\"donationTitle\" class=\"donation-title\">Export Current Chapter</h2>
-      <p class=\"donation-copy\">Export is part of the premium experience. If this project helps you, please support it with a donation.</p>
-      <div class=\"donation-actions\">
-        <a class=\"donate\" href=\"https://paypal.me/lamerock\" target=\"_blank\" rel=\"noopener noreferrer\">Donate via PayPal</a>
-        <button id=\"continueExport\" class=\"continue\" type=\"button\">I donated, continue export</button>
-      </div>
-    </section>
-  </div>
   <script>
     const state = {
       chapters: [],
@@ -694,9 +597,6 @@ def _index_html() -> str:
       disclaimerModal: document.getElementById('disclaimerModal'),
       disclaimerBackdrop: document.getElementById('disclaimerBackdrop'),
       acceptDisclaimer: document.getElementById('acceptDisclaimer'),
-      donationModal: document.getElementById('donationModal'),
-      donationBackdrop: document.getElementById('donationBackdrop'),
-      continueExport: document.getElementById('continueExport'),
       sidebarScrim: document.getElementById('sidebarScrim'),
       toggleSidebar: document.getElementById('toggleSidebar'),
       prevChapter: document.getElementById('prevChapter'),
@@ -728,22 +628,7 @@ def _index_html() -> str:
       closeDisclaimerModal();
     }
 
-    function closeDonationModal() {
-      els.donationModal.classList.remove('open');
-      els.donationModal.setAttribute('aria-hidden', 'true');
-    }
-
-    function openDonationModal() {
-      els.donationModal.classList.add('open');
-      els.donationModal.setAttribute('aria-hidden', 'false');
-    }
-
     function requestPremiumExport() {
-      showError(new Error('Export is disabled.'));
-    }
-
-    function continueExport() {
-      closeDonationModal();
       showError(new Error('Export is disabled.'));
     }
 
@@ -939,8 +824,6 @@ def _index_html() -> str:
     els.zoomOut.addEventListener('click', () => adjustZoom(-0.1));
     els.zoomIn.addEventListener('click', () => adjustZoom(0.1));
     els.download.addEventListener('click', requestPremiumExport);
-    els.continueExport.addEventListener('click', continueExport);
-    els.donationBackdrop.addEventListener('click', closeDonationModal);
     els.acceptDisclaimer.addEventListener('click', acceptDisclaimer);
     els.disclaimerBackdrop.addEventListener('click', acceptDisclaimer);
 
@@ -985,7 +868,6 @@ def _index_html() -> str:
           acceptDisclaimer();
           return;
         }
-        closeDonationModal();
         setSidebarOpen(false);
       }
     });
@@ -1046,7 +928,7 @@ class CombatronHandler(BaseHTTPRequestHandler):
             self._send_image(payload, suffix, content_type)
             return
         if parsed.path == "/api/export":
-          self._send_json({"error": "export is disabled"}, status=HTTPStatus.FORBIDDEN)
+            self._send_json({"error": "export is disabled"}, status=HTTPStatus.FORBIDDEN)
             return
         self.send_error(HTTPStatus.NOT_FOUND, "Not Found")
 
